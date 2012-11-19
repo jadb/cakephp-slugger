@@ -150,15 +150,16 @@ class SluggableRoute extends CakeRoute {
 				'recursive' => -1
 			));
 			$counts = $Model->find('all', array(
-				'fields' => array(					
-					'LOWER(TRIM('.$Model->name.'.'.$field.')) AS '.$field,
+				'fields' => array(
+					$Model->name.'.'.$field,
 					'COUNT(*) AS count'
-				),
-				'group' => array(
-					$field
 				)
 			));
-			$counts = Set::combine($counts, '{n}.0.'.$field, '{n}.0.count');
+
+			$counts = Set::combine($counts, '{n}.' . $Model->name . '.'.$field, '{n}.0.count');
+			foreach ($counts as $k => $v) {
+				$counts[strtolower($k)] = $v;
+			}
 			$listedSlugs = array();
 			foreach ($slugs as $pk => $fields) {
 				$values = array(
