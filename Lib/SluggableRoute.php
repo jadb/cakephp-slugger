@@ -38,6 +38,8 @@ class SluggableRoute extends CakeRoute {
 			return false;
 		}
 
+		Configure::write('Config.language', $params['lang']);
+
 		if (isset($this->options['models']) && !empty($params['pass'])) {
 			foreach ($this->options['models'] as $checkNamed => $slugField) {
 				if (is_numeric($checkNamed)) {
