@@ -142,6 +142,39 @@ class SluggableRoute extends CakeRoute {
 			if (!$field) {
 				$field = $Model->displayField;
 			}
+
+			$query = array(
+				'fields' => array(
+					'LOWER(TRIM('.$Model->name.'.'.$field.')) AS '.$field,
+					'COUNT(*) AS count'
+				),
+				'group' => array(
+					$field
+				)
+			);
+
+			if ($Model->Behaviors->attached('Translate') || $Model->Behaviors->attached('MultiTranslate')) {
+				$I18n = I18n::getInstance();
+				$I18n->l10n->get(Configure::read('Config.language'));
+				$Model->locale = $I18n->l10n->locale;
+				$db = ConnectionManager::getDataSource($Model->useDbConfig);
+				$query['fields'] = array(
+					'LOWER(TRIM(' . 'I18n__' . $field . '.content)) AS ' . $field,
+					'COUNT(*) AS count'
+				);
+				$query['joins'] = array(array(
+					'type' => 'INNER',
+					'alias' => 'I18n__' . $field,
+					'table' => 'i18n',
+					'conditions' => array(
+						$Model->name.'.'.$Model->primaryKey => $db->identifier("I18n__{$field}.foreign_key"),
+						'I18n__' . $field . '.model' => $Model->name,
+						'I18n__' . $field . '.field' => $field,
+						'I18n__' . $field . '.locale' => $Model->locale
+					)
+				));
+			}
+
 			$slugs = $Model->find('all', array(
 				'fields' => array(
 					$Model->name.'.'.$Model->primaryKey,
@@ -149,17 +182,8 @@ class SluggableRoute extends CakeRoute {
 				),
 				'recursive' => -1
 			));
-			$counts = $Model->find('all', array(
-				'fields' => array(
-					$Model->name.'.'.$field,
-					'COUNT(*) AS count'
-				)
-			));
-
-			$counts = Set::combine($counts, '{n}.' . $Model->name . '.'.$field, '{n}.0.count');
-			foreach ($counts as $k => $v) {
-				$counts[strtolower($k)] = $v;
-			}
+			$counts = $Model->find('all', $query);
+			$counts = Set::combine($counts, '{n}.0.'.$field, '{n}.0.count');
 			$listedSlugs = array();
 			foreach ($slugs as $pk => $fields) {
 				$values = array(
