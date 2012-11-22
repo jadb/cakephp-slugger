@@ -12,6 +12,7 @@
  * @license       MIT License (http://www.opensource.org/licenses/mit-license.php)
  */
  App::uses('CakeRoute', 'Routing/Route');
+ App::uses('ClassRegistry', 'Utility');
 
 /**
  * Sluggable Route
