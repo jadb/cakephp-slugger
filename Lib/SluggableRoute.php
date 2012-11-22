@@ -183,8 +183,12 @@ class SluggableRoute extends CakeRoute {
 				),
 				'recursive' => -1
 			));
-			$counts = $Model->find('all', $query);
-			$counts = Set::combine($counts, '{n}.0.'.$field, '{n}.0.count');
+
+			$counts = array();
+			foreach ($Model->find('all', $query) as $k => $group) {
+				$counts[strtolower(trim($group[0][$field]))] = $group[0]['count'];
+			}
+
 			$listedSlugs = array();
 			foreach ($slugs as $pk => $fields) {
 				$values = array(
